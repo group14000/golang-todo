@@ -16,6 +16,7 @@ type Config struct {
 	EmailUser     string
 	EmailPassword string
 	EmailUseTLS   bool
+	AIAPIKey      string
 }
 
 func LoadConfig() *Config {
@@ -61,6 +62,11 @@ func LoadConfig() *Config {
 
 	emailUseTLS := os.Getenv("EMAIL_USE_TLS") == "True"
 
+	aiKey := os.Getenv("AI_API_KEY")
+	if aiKey == "" {
+		log.Println("Warning: AI_API_KEY not set; AI endpoints will be disabled")
+	}
+
 	return &Config{
 		MongoDBURL:    mongoURL,
 		JWTSecret:     jwtSecret,
@@ -69,5 +75,6 @@ func LoadConfig() *Config {
 		EmailUser:     emailUser,
 		EmailPassword: emailPassword,
 		EmailUseTLS:   emailUseTLS,
+		AIAPIKey:      aiKey,
 	}
 }

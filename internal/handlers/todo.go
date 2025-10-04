@@ -29,6 +29,18 @@ type UpdateTodoRequest struct {
 	Completed   *bool   `json:"completed"`
 }
 
+// @Summary      Create todo
+// @Description  Creates a new todo item for the authenticated user.
+// @Tags         todos
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        payload  body      CreateTodoRequestDTO  true  "Create todo"
+// @Success      201      {object}  models.Todo
+// @Failure      400      {object}  ErrorResponse
+// @Failure      401      {object}  ErrorResponse
+// @Failure      500      {object}  ErrorResponse
+// @Router       /todos [post]
 func (h *TodoHandler) Create(c *gin.Context) {
 	userIDStr := c.GetString("user_id")
 	uid, err := primitive.ObjectIDFromHex(userIDStr)
@@ -57,6 +69,15 @@ func (h *TodoHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, todo)
 }
 
+// @Summary      List todos
+// @Description  Lists all todos for the authenticated user.
+// @Tags         todos
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {array}   models.Todo
+// @Failure      401  {object}  ErrorResponse
+// @Failure      500  {object}  ErrorResponse
+// @Router       /todos [get]
 func (h *TodoHandler) List(c *gin.Context) {
 	userIDStr := c.GetString("user_id")
 	uid, err := primitive.ObjectIDFromHex(userIDStr)
@@ -73,6 +94,17 @@ func (h *TodoHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, todos)
 }
 
+// @Summary      Get todo
+// @Description  Retrieves a single todo by ID.
+// @Tags         todos
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      string  true  "Todo ID"
+// @Success      200  {object}  models.Todo
+// @Failure      400  {object}  ErrorResponse
+// @Failure      401  {object}  ErrorResponse
+// @Failure      404  {object}  ErrorResponse
+// @Router       /todos/{id} [get]
 func (h *TodoHandler) Get(c *gin.Context) {
 	userIDStr := c.GetString("user_id")
 	uid, err := primitive.ObjectIDFromHex(userIDStr)
@@ -95,6 +127,19 @@ func (h *TodoHandler) Get(c *gin.Context) {
 	c.JSON(http.StatusOK, todo)
 }
 
+// @Summary      Update todo
+// @Description  Partially updates a todo.
+// @Tags         todos
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id       path      string                 true  "Todo ID"
+// @Param        payload  body      UpdateTodoRequestDTO   true  "Update todo"
+// @Success      200      {object}  map[string]string
+// @Failure      400      {object}  ErrorResponse
+// @Failure      401      {object}  ErrorResponse
+// @Failure      500      {object}  ErrorResponse
+// @Router       /todos/{id} [patch]
 func (h *TodoHandler) Update(c *gin.Context) {
 	userIDStr := c.GetString("user_id")
 	uid, err := primitive.ObjectIDFromHex(userIDStr)
@@ -127,6 +172,17 @@ func (h *TodoHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "updated"})
 }
 
+// @Summary      Delete todo
+// @Description  Deletes a todo by ID.
+// @Tags         todos
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      string  true  "Todo ID"
+// @Success      200  {object}  map[string]string
+// @Failure      400  {object}  ErrorResponse
+// @Failure      401  {object}  ErrorResponse
+// @Failure      500  {object}  ErrorResponse
+// @Router       /todos/{id} [delete]
 func (h *TodoHandler) Delete(c *gin.Context) {
 	userIDStr := c.GetString("user_id")
 	uid, err := primitive.ObjectIDFromHex(userIDStr)

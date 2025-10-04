@@ -1,0 +1,540 @@
+basePath: /
+definitions:
+  handlers.AIChatMessageDTO:
+    properties:
+      content:
+        example: Hello, how are you?
+        type: string
+      role:
+        example: user
+        type: string
+    type: object
+  handlers.AIChatRequestDTO:
+    properties:
+      messages:
+        items:
+          $ref: '#/definitions/handlers.AIChatMessageDTO'
+        type: array
+      prompt:
+        example: Explain clean architecture in Go
+        type: string
+      stream:
+        example: false
+        type: boolean
+    type: object
+  handlers.AIChatResponseDTO:
+    properties:
+      answer:
+        example: Clean Architecture in Go involves...
+        type: string
+    type: object
+  handlers.CreateTodoRequestDTO:
+    properties:
+      description:
+        example: 2 liters of whole milk
+        type: string
+      title:
+        example: Buy milk
+        type: string
+    type: object
+  handlers.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  handlers.ForgotPasswordRequestDTO:
+    properties:
+      email:
+        example: john@example.com
+        type: string
+    type: object
+  handlers.LoginRequestDTO:
+    properties:
+      email:
+        example: john@example.com
+        type: string
+      password:
+        example: Secretp@ss1
+        type: string
+    type: object
+  handlers.ResetPasswordRequestDTO:
+    properties:
+      email:
+        example: john@example.com
+        type: string
+      new_password:
+        example: NewSecretp@ss1
+        type: string
+      otp:
+        example: "123456"
+        type: string
+    type: object
+  handlers.SignupRequestDTO:
+    properties:
+      email:
+        example: john@example.com
+        type: string
+      name:
+        example: John Doe
+        type: string
+      password:
+        example: Secretp@ss1
+        type: string
+    type: object
+  handlers.UpdateTodoRequestDTO:
+    properties:
+      completed:
+        example: true
+        type: boolean
+      description:
+        example: Whole grain
+        type: string
+      title:
+        example: Buy bread
+        type: string
+    type: object
+  handlers.VerifyOTPRequestDTO:
+    properties:
+      email:
+        example: john@example.com
+        type: string
+      name:
+        example: John Doe
+        type: string
+      otp:
+        example: "123456"
+        type: string
+      password:
+        example: Secretp@ss1
+        type: string
+    type: object
+  models.Todo:
+    properties:
+      completed:
+        type: boolean
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    required:
+    - title
+    type: object
+  models.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      is_verified:
+        type: boolean
+      name:
+        type: string
+    required:
+    - email
+    - name
+    type: object
+  services.LoginResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: A Clean Architecture Todo API with OTP-based authentication, JWT authorization,
+    and AI chat integration.
+  title: Golang Todo API
+  version: "1.0"
+paths:
+  /ai/chat:
+    post:
+      consumes:
+      - application/json
+      description: Sends a prompt or multi-turn messages to the AI model. Set stream=true
+        for SSE streaming (Swagger UI only shows non-stream examples).
+      parameters:
+      - description: AI chat request
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AIChatRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.AIChatResponseDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: AI Chat
+      tags:
+      - ai
+  /forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Sends an OTP to user email to reset password.
+      parameters:
+      - description: Forgot password
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ForgotPasswordRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Forgot password
+      tags:
+      - auth
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a verified user and returns access and refresh tokens.
+      parameters:
+      - description: Login credentials
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LoginRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/services.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Login
+      tags:
+      - auth
+  /profile:
+    get:
+      description: Returns the authenticated user's profile.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get profile
+      tags:
+      - auth
+  /reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Resets password using a valid OTP from /forgot-password.
+      parameters:
+      - description: Reset password
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ResetPasswordRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Reset password
+      tags:
+      - auth
+  /signup:
+    post:
+      consumes:
+      - application/json
+      description: Initiates signup by sending a verification OTP to the provided
+        email. Use /verify-otp to complete.
+      parameters:
+      - description: Signup request
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SignupRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Start signup (send OTP)
+      tags:
+      - auth
+  /todos:
+    get:
+      description: Lists all todos for the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Todo'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List todos
+      tags:
+      - todos
+    post:
+      consumes:
+      - application/json
+      description: Creates a new todo item for the authenticated user.
+      parameters:
+      - description: Create todo
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateTodoRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Todo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create todo
+      tags:
+      - todos
+  /todos/{id}:
+    delete:
+      description: Deletes a todo by ID.
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete todo
+      tags:
+      - todos
+    get:
+      description: Retrieves a single todo by ID.
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Todo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get todo
+      tags:
+      - todos
+    patch:
+      consumes:
+      - application/json
+      description: Partially updates a todo.
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update todo
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateTodoRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update todo
+      tags:
+      - todos
+  /verify-otp:
+    post:
+      consumes:
+      - application/json
+      description: Verifies OTP and creates the user account.
+      parameters:
+      - description: Verify OTP
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.VerifyOTPRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Verify signup OTP
+      tags:
+      - auth
+schemes:
+- http
+securityDefinitions:
+  BearerAuth:
+    description: 'Provide your JWT access token as: Bearer <token>'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

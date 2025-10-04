@@ -6,7 +6,7 @@ import (
 	"github.com/group14000/golang-todo/internal/middleware"
 )
 
-func SetupRoutes(r *gin.Engine, authHandler *handlers.AuthHandler, todoHandler *handlers.TodoHandler, authMW *middleware.AuthMiddleware) {
+func SetupRoutes(r *gin.Engine, authHandler *handlers.AuthHandler, todoHandler *handlers.TodoHandler, aiHandler *handlers.AIHandler, authMW *middleware.AuthMiddleware) {
 	// Public routes
 	r.POST("/signup", authHandler.SignUp)
 	r.POST("/verify-otp", authHandler.VerifyOTP)
@@ -19,6 +19,7 @@ func SetupRoutes(r *gin.Engine, authHandler *handlers.AuthHandler, todoHandler *
 	protected.Use(authMW.Handler())
 	{
 		protected.GET("/profile", authHandler.GetProfile)
+		protected.POST("/ai/chat", aiHandler.Chat)
 	}
 
 	// Todo routes (protected)

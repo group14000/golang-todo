@@ -1,3 +1,12 @@
+// @title           Golang Todo API
+// @version         1.0
+// @description     A Clean Architecture Todo API with OTP-based authentication, JWT authorization, and AI chat integration.
+// @BasePath        /
+// @schemes         http
+// @securityDefinitions.apikey BearerAuth
+// @in              header
+// @name            Authorization
+// @description     Provide your JWT access token as: Bearer <token>
 package main
 
 import (
@@ -11,6 +20,11 @@ import (
 	"github.com/group14000/golang-todo/internal/handlers"
 	"github.com/group14000/golang-todo/internal/middleware"
 	"github.com/group14000/golang-todo/internal/services"
+
+	// Swagger docs & handlers
+	_ "github.com/group14000/golang-todo/docs"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func main() {
@@ -39,9 +53,16 @@ func main() {
 
 	authMW := middleware.NewAuthMiddleware(cfg.JWTSecret)
 
-	r := gin.Default()
-	api.SetupRoutes(r, authHandler, todoHandler, authMW)
+	// AI dependencies
+	aiService := services.NewAIService(cfg.AIAPIKey)
+	aiHandler := handlers.NewAIHandler(aiService)
 
-	log.Println("Server starting on :8080")
+	r := gin.Default()
+	api.SetupRoutes(r, authHandler, todoHandler, aiHandler, authMW)
+
+	// Swagger endpoint
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	log.Println("Server starting on :8080 (swagger at /swagger/index.html)")
 	r.Run(":8080")
 }
